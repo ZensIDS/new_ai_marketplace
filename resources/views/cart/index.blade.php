@@ -92,7 +92,7 @@
 
     @push('scripts')
         <script>
-            const waNumber = "{{ config('services.whatsapp.number', '6281234567890') }}";
+            const waNumber = "{{ config('services.whatsapp.number', '62895399259868') }}";
             const userName = @json(auth()->user()->name ?? '');
             const userEmail = @json(auth()->user()->email ?? '');
 

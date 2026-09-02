@@ -3,7 +3,7 @@
 
 @section('content')
     @php
-        $waNumber = config('services.whatsapp.number', '6281234567890');
+        $waNumber = config('services.whatsapp.number', '62895399259868');
         $userName = auth()->check() ? auth()->user()->name : '';
         $userEmail = auth()->check() ? auth()->user()->email : '';
         $hasVariants = $product->variants->isNotEmpty();
