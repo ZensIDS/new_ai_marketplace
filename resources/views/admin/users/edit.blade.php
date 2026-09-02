@@ -28,7 +28,7 @@
             <label class="form-label">Password (kosongkan jika tidak diganti)</label>
             <input type="password" name="password" class="form-control">
         </div>
-        <button class="btn text-white" style="background:#FF5722">Update</button>
+        <button class="btn text-white" style="background:#C9A227;color:#0B0B0C">Update</button>
         <a href="{{ route('admin.users.index') }}" class="btn btn-light">Batal</a>
     </form>
 </div>

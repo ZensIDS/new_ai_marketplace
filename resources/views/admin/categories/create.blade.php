@@ -14,7 +14,7 @@
             <label class="form-label">Gambar (opsional)</label>
             <input type="file" name="image" class="form-control">
         </div>
-        <button class="btn text-white" style="background:#FF5722">Simpan</button>
+        <button class="btn text-white" style="background:#C9A227;color:#0B0B0C">Simpan</button>
         <a href="{{ route('admin.categories.index') }}" class="btn btn-light">Batal</a>
     </form>
 </div>

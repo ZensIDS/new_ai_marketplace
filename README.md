@@ -123,4 +123,4 @@ Login admin lalu buka `http://localhost:8000/admin/dashboard` untuk kelola Kateg
 - Tambahkan riwayat pesanan (order history) jika nanti mau simpan transaksi di database, bukan hanya via WhatsApp.
 - Tambahkan review/rating produk.
 - Ganti Tailwind CDN dengan build Vite (`npm install && npm run build`) untuk performa produksi yang lebih optimal.
-"# new_ai_marketplace" 
+  "# new_ai_marketplace"

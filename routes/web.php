@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [HomeController::class, 'products'])->name('products.index');
+Route::get('/product/{product:slug}', [HomeController::class, 'show'])->name('products.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -38,8 +39,8 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 */
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
-    Route::post('/cart/update/{product}', [CartController::class, 'updateQty'])->name('cart.update');
-    Route::delete('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/update/{key}', [CartController::class, 'updateQty'])->name('cart.update');
+    Route::delete('/cart/remove/{key}', [CartController::class, 'remove'])->name('cart.remove');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 });
 

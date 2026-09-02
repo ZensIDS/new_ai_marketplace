@@ -23,6 +23,11 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('sort_order');
+    }
+
     public function getImageUrlAttribute(): string
     {
         return $this->image
@@ -33,5 +38,34 @@ class Product extends Model
     public function getFormattedPriceAttribute(): string
     {
         return 'Rp ' . number_format((float) $this->price, 0, ',', '.');
+    }
+
+    /**
+     * Harga terendah dari varian (jika ada), fallback ke harga dasar produk.
+     */
+    public function getDisplayPriceAttribute(): float
+    {
+        if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
+            return (float) $this->variants->min('price');
+        }
+
+        return (float) $this->price;
+    }
+
+    public function getFormattedDisplayPriceAttribute(): string
+    {
+        return 'Rp ' . number_format($this->display_price, 0, ',', '.');
+    }
+
+    /**
+     * Varian default (termurah / pertama) untuk quick-add di listing.
+     */
+    public function getDefaultVariantAttribute()
+    {
+        if ($this->relationLoaded('variants')) {
+            return $this->variants->sortBy('price')->first();
+        }
+
+        return $this->variants()->orderBy('price')->first();
     }
 }

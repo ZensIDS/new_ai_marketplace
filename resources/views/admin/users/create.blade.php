@@ -28,7 +28,7 @@
             <label class="form-label">Password</label>
             <input type="password" name="password" class="form-control" required>
         </div>
-        <button class="btn text-white" style="background:#FF5722">Simpan</button>
+        <button class="btn text-white" style="background:#C9A227;color:#0B0B0C">Simpan</button>
         <a href="{{ route('admin.users.index') }}" class="btn btn-light">Batal</a>
     </form>
 </div>

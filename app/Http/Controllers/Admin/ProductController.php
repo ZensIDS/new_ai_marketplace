@@ -38,16 +38,23 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
             'is_active' => ['nullable', 'boolean'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.name' => ['required_with:variants', 'string', 'max:100'],
+            'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
+            'variants.*.stock' => ['required_with:variants', 'integer', 'min:0'],
         ]);
 
         $data['slug'] = Str::slug($data['name']) . '-' . Str::random(5);
         $data['is_active'] = $request->boolean('is_active', true);
+        $variants = $data['variants'] ?? [];
+        unset($data['variants']);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
-        Product::create($data);
+        $product = Product::create($data);
+        $this->syncVariants($product, $variants);
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
@@ -55,6 +62,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::all();
+        $product->load('variants');
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
@@ -68,15 +76,22 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
             'is_active' => ['nullable', 'boolean'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.name' => ['required_with:variants', 'string', 'max:100'],
+            'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
+            'variants.*.stock' => ['required_with:variants', 'integer', 'min:0'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+        $variants = $data['variants'] ?? [];
+        unset($data['variants']);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
         $product->update($data);
+        $this->syncVariants($product, $variants);
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui.');
     }
@@ -85,5 +100,26 @@ class ProductController extends Controller
     {
         $product->delete();
         return back()->with('success', 'Produk berhasil dihapus.');
+    }
+
+    /**
+     * Hapus semua varian lama lalu simpan ulang dari input form (repeater).
+     */
+    protected function syncVariants(Product $product, array $variants): void
+    {
+        $product->variants()->delete();
+
+        foreach (array_values($variants) as $i => $variant) {
+            if (empty($variant['name'])) {
+                continue;
+            }
+
+            $product->variants()->create([
+                'name' => $variant['name'],
+                'price' => $variant['price'],
+                'stock' => $variant['stock'] ?? 0,
+                'sort_order' => $i,
+            ]);
+        }
     }
 }

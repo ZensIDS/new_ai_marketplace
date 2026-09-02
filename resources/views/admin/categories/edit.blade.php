@@ -16,7 +16,7 @@
             @endif
             <input type="file" name="image" class="form-control">
         </div>
-        <button class="btn text-white" style="background:#FF5722">Update</button>
+        <button class="btn text-white" style="background:#C9A227;color:#0B0B0C">Update</button>
         <a href="{{ route('admin.categories.index') }}" class="btn btn-light">Batal</a>
     </form>
 </div>
