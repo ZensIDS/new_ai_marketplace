@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -12,10 +13,18 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'tags']);
 
         if ($request->filled('q')) {
-            $query->where('name', 'like', '%' . $request->q . '%');
+            $search = trim($request->q);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('tags', function ($tagQuery) use ($search) {
+                      $tagQuery->where('name', 'like', "%{$search}%")
+                               ->orWhere('related_keywords', 'like', "%{$search}%");
+                  });
+            });
         }
 
         $products = $query->latest()->paginate(10)->withQueryString();
@@ -25,7 +34,8 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('admin.products.create', compact('categories'));
+        $tags = Tag::orderBy('name')->get();
+        return view('admin.products.create', compact('categories', 'tags'));
     }
 
     public function store(Request $request)
@@ -42,12 +52,14 @@ class ProductController extends Controller
             'variants.*.name' => ['required_with:variants', 'string', 'max:100'],
             'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
             'variants.*.stock' => ['required_with:variants', 'integer', 'min:0'],
+            'tags_input' => ['nullable', 'string'],
         ]);
 
         $data['slug'] = Str::slug($data['name']) . '-' . Str::random(5);
         $data['is_active'] = $request->boolean('is_active', true);
         $variants = $data['variants'] ?? [];
-        unset($data['variants']);
+        $tags = preg_split('/[,\n]+/', $data['tags_input'] ?? '');
+        unset($data['variants'], $data['tags_input']);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
@@ -55,6 +67,7 @@ class ProductController extends Controller
 
         $product = Product::create($data);
         $this->syncVariants($product, $variants);
+        $this->syncTags($product, $tags);
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
@@ -62,8 +75,9 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::all();
-        $product->load('variants');
-        return view('admin.products.edit', compact('product', 'categories'));
+        $tags = Tag::orderBy('name')->get();
+        $product->load(['variants', 'tags']);
+        return view('admin.products.edit', compact('product', 'categories', 'tags'));
     }
 
     public function update(Request $request, Product $product)
@@ -80,11 +94,13 @@ class ProductController extends Controller
             'variants.*.name' => ['required_with:variants', 'string', 'max:100'],
             'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
             'variants.*.stock' => ['required_with:variants', 'integer', 'min:0'],
+            'tags_input' => ['nullable', 'string'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
         $variants = $data['variants'] ?? [];
-        unset($data['variants']);
+        $tags = preg_split('/[,\n]+/', $data['tags_input'] ?? '');
+        unset($data['variants'], $data['tags_input']);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
@@ -92,6 +108,7 @@ class ProductController extends Controller
 
         $product->update($data);
         $this->syncVariants($product, $variants);
+        $this->syncTags($product, $tags);
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui.');
     }
@@ -122,4 +139,26 @@ class ProductController extends Controller
             ]);
         }
     }
+
+    protected function syncTags(Product $product, array $tagNames): void
+    {
+        $tagIds = collect($tagNames)
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique(fn ($name) => Str::lower($name))
+            ->map(function ($name) {
+                $tag = Tag::firstOrCreate(
+                    ['name' => $name],
+                    ['slug' => Str::slug($name)]
+                );
+
+                return $tag->id;
+            })
+            ->values()
+            ->all();
+
+        $product->tags()->sync($tagIds);
+    }
+
+
 }

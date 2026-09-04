@@ -60,16 +60,70 @@
             background: #F9FAFB;
         }
 
+        .sidebar-header {
+            position: relative;
+        }
+
+        .sidebar-close {
+            display: none;
+            position: absolute;
+            top: 18px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #D1D5DB;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .sidebar-close:hover {
+            background: #C9A227;
+            color: #0B0B0C;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
         @media (max-width: 768px) {
+
             .sidebar {
                 position: fixed;
                 z-index: 1050;
+                top: 0;
+                bottom: 0;
                 left: -260px;
-                transition: .3s;
+                width: 250px;
+                min-height: 100vh;
+                transition: left .3s ease;
             }
 
             .sidebar.show {
                 left: 0;
+            }
+
+            .sidebar-close {
+                display: flex;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 1040;
+                background: rgba(0, 0, 0, .45);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity .3s ease, visibility .3s ease;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+                opacity: 1;
+                visibility: visible;
             }
         }
     </style>
@@ -79,8 +133,15 @@
 <body>
     <div class="d-flex">
         <aside class="sidebar" id="sidebar">
-            <div class="brand">Market<span>Ku</span> <small class="d-block text-white-50 fs-6 fw-normal">Admin
-                    Panel</small></div>
+            <div class="sidebar-header">
+                <div class="brand">
+                    Market<span>Ku</span>
+                    <small class="d-block text-white-50 fs-6 fw-normal">Admin Panel</small>
+                </div>
+                <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Tutup sidebar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
             <nav class="d-flex flex-column gap-1">
                 <a href="{{ route('admin.dashboard') }}"
                     class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -93,6 +154,10 @@
                 <a href="{{ route('admin.products.index') }}"
                     class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                     <i class="bi bi-box-seam"></i> Produk
+                </a>
+                <a href="{{ route('admin.tags.index') }}"
+                    class="{{ request()->routeIs('admin.tags.*') ? 'active' : '' }}">
+                    <i class="bi bi-hash"></i> Tags & Kata Terkait
                 </a>
                 <a href="{{ route('admin.users.index') }}"
                     class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
@@ -109,10 +174,11 @@
                 </form>
             </nav>
         </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <div class="flex-fill">
             <header class="bg-white shadow-sm d-flex align-items-center justify-content-between px-4 py-3">
-                <button class="btn d-md-none" onclick="document.getElementById('sidebar').classList.toggle('show')">
+                <button type="button" class="btn d-md-none" id="sidebarToggle" aria-label="Buka menu">
                     <i class="bi bi-list fs-4"></i>
                 </button>
                 <h5 class="mb-0 fw-bold">@yield('title', 'Dashboard')</h5>
@@ -134,6 +200,64 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function openSidebar() {
+                sidebar.classList.add('show');
+                sidebarOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            sidebarToggle?.addEventListener('click', function() {
+                if (sidebar.classList.contains('show')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            sidebarClose?.addEventListener('click', function() {
+                closeSidebar();
+            });
+
+            sidebarOverlay?.addEventListener('click', function() {
+                closeSidebar();
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeSidebar();
+                }
+            });
+
+            // Otomatis tutup ketika menu sidebar diklik di mobile
+            sidebar.querySelectorAll('a').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+
+            // Reset state ketika kembali ke desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeSidebar();
+                }
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 
