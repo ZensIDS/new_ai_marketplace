@@ -25,10 +25,65 @@ class HomeController extends Controller
         }
 
         if ($request->filled('q')) {
-            $query->where('name', 'like', '%' . $request->q . '%');
+            $search = trim($request->q);
+            $tokens = collect(preg_split('/\s+/', $search))
+                ->map(fn ($token) => trim($token))
+                ->filter(fn ($token) => mb_strlen($token) >= 2)
+                ->unique()
+                ->values();
+
+            if ($tokens->isNotEmpty()) {
+                $query->where(function ($outer) use ($tokens) {
+                    foreach ($tokens as $token) {
+                        $like = '%' . $token . '%';
+                        $outer->where(function ($q) use ($like) {
+                            $q->where('products.name', 'like', $like)
+                              ->orWhere('products.description', 'like', $like)
+                              ->orWhereHas('tags', function ($tagQuery) use ($like) {
+                                  $tagQuery->where('tags.name', 'like', $like)
+                                           ->orWhere('tags.related_keywords', 'like', $like);
+                              })
+                              ->orWhereHas('category', function ($categoryQuery) use ($like) {
+                                  $categoryQuery->where('categories.name', 'like', $like);
+                              });
+                        });
+                    }
+                });
+
+                $bindings = [];
+                $scoreParts = [];
+
+                // Exact phrase gets the biggest boost.
+                $phraseLike = '%' . $search . '%';
+                $scoreParts[] = "CASE WHEN products.name LIKE ? THEN 100 ELSE 0 END";
+                $bindings[] = $phraseLike;
+                $scoreParts[] = "CASE WHEN products.description LIKE ? THEN 60 ELSE 0 END";
+                $bindings[] = $phraseLike;
+
+                foreach ($tokens as $token) {
+                    $like = '%' . $token . '%';
+                    $scoreParts[] = "CASE WHEN products.name LIKE ? THEN 50 ELSE 0 END";
+                    $bindings[] = $like;
+                    $scoreParts[] = "CASE WHEN products.description LIKE ? THEN 25 ELSE 0 END";
+                    $bindings[] = $like;
+                    $scoreParts[] = "CASE WHEN EXISTS (SELECT 1 FROM product_tag pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.product_id = products.id AND t.name LIKE ?) THEN 45 ELSE 0 END";
+                    $bindings[] = $like;
+                    $scoreParts[] = "CASE WHEN EXISTS (SELECT 1 FROM product_tag pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.product_id = products.id AND t.related_keywords LIKE ?) THEN 30 ELSE 0 END";
+                    $bindings[] = $like;
+                    $scoreParts[] = "CASE WHEN EXISTS (SELECT 1 FROM categories c WHERE c.id = products.category_id AND c.name LIKE ?) THEN 15 ELSE 0 END";
+                    $bindings[] = $like;
+                }
+
+                $query->select('products.*')
+                    ->selectRaw('(' . implode(' + ', $scoreParts) . ') as relevance_score', $bindings)
+                    ->orderByDesc('relevance_score')
+                    ->orderByDesc('products.created_at');
+            }
+        } else {
+            $query->latest('products.created_at');
         }
 
-        $products = $query->latest()->paginate(12)->withQueryString();
+        $products = $query->paginate(12)->withQueryString();
         $categories = Category::withCount('products')->get();
 
         return view('products.index', compact('products', 'categories'));

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -86,6 +87,46 @@ class DatabaseSeeder extends Seeder
                     'sort_order' => $i,
                 ]);
             }
+        }
+
+        // Tag utama + kata terkait untuk demo semantic-like keyword expansion.
+        $tagMap = [
+            'AI' => 'artificial intelligence, generative ai, machine learning, intelligent',
+            'Chatbot' => 'assistant, conversational ai, customer service, chat',
+            'Writing' => 'writer, copywriting, article, content, text',
+            'Image' => 'design, illustration, artwork, visual, generator',
+            'Video' => 'clip, animation, subtitle, video generator',
+            'Audio' => 'sound, music, voice, speech, podcast, audio processing',
+            'Music' => 'audio, sound, song, melody, music generation, beat',
+            'Voice' => 'audio, speech, text to speech, voice cloning, narration',
+            'Coding' => 'programming, developer, code, software, debugging',
+            'Generative AI' => 'gen ai, content generation, ai generator, generative',
+        ];
+
+        $tagModels = collect($tagMap)->mapWithKeys(function ($related, $name) {
+            return [$name => Tag::create([
+                'name' => $name,
+                'slug' => Str::slug($name),
+                'related_keywords' => $related,
+            ])];
+        });
+
+        // Hubungkan tag dengan produk demo berdasarkan konsepnya.
+        foreach (Product::all() as $product) {
+            $names = ['AI'];
+            $category = strtolower($product->category->name ?? '');
+
+            if (str_contains($category, 'chatbot')) $names[] = 'Chatbot';
+            if (str_contains($category, 'penulis') || str_contains($product->name, 'Writer')) $names[] = 'Writing';
+            if (str_contains($category, 'gambar') || str_contains($product->name, 'Studio') || str_contains($product->name, 'Creator')) $names[] = 'Image';
+            if (str_contains($category, 'video')) $names[] = 'Video';
+            if (str_contains($category, 'audio') || str_contains(strtolower($product->name), 'audio')) $names[] = 'Audio';
+            if (str_contains(strtolower($product->name), 'music')) $names[] = 'Music';
+            if (str_contains(strtolower($product->name), 'voice') || str_contains(strtolower($product->description), 'voice')) $names[] = 'Voice';
+            if (str_contains($category, 'coding') || str_contains(strtolower($product->name), 'code')) $names[] = 'Coding';
+            $names[] = 'Generative AI';
+
+            $product->tags()->sync($tagModels->only(array_unique($names))->pluck('id')->all());
         }
     }
 }
