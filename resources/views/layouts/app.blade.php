@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'MarketKu - Marketplace Langganan AI Terpercaya')</title>
+    <title>@yield('title', 'SATU AI - Marketplace Langganan AI Terpercaya')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -67,8 +67,9 @@
         Langganan AI Premium — chat langsung admin lewat WhatsApp!
     </div> --}}
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-            <a href="{{ route('home') }}" class="text-2xl font-extrabold text-white shrink-0">Market<span
-                    class="text-primary">Ku</span></a>
+            <a href="{{ route('home') }}" class="shrink-0 flex items-center">
+                <img src="{{ asset('images/logosatuai1.png') }}" alt="SATU AI" class="h-12 w-auto object-contain">
+            </a>
 
             <form action="{{ route('products.index') }}" method="GET" class="flex-1 hidden md:flex">
                 <input type="text" name="q" value="{{ request('q') }}"
@@ -134,7 +135,9 @@
     <footer class="bg-dark text-gray-300 mt-16">
         <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
             <div class="col-span-2 md:col-span-1">
-                <p class="text-2xl font-extrabold text-white mb-3">Market<span class="text-primary">Ku</span></p>
+                <div class="mb-3">
+                    <img src="{{ asset('images/logosatuai1.png') }}" alt="SATU AI" class="h-20 w-auto object-contain">
+                </div>
                 <p class="text-sm text-gray-400">Marketplace terpercaya untuk berbagai langganan tools AI premium, cepat
                     dan mudah.</p>
             </div>
@@ -161,7 +164,7 @@
             </div>
         </div>
         <div class="border-t border-white/10 text-center text-xs text-gray-500 py-4">
-            &copy; {{ date('Y') }} MarketKu. All rights reserved.
+            &copy; {{ date('Y') }} SATU AI. All rights reserved.
         </div>
     </footer>
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', $product->name . ' - MarketKu')
+@section('title', $product->name . ' - SATU AI')
 
 @section('content')
     @php

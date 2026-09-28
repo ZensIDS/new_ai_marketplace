@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Masuk - MarketKu')
+@section('title', 'Masuk - SATU AI')
 
 @section('content')
     <div class="max-w-md mx-auto px-4 py-16">
         <div class="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
             <h1 class="text-2xl font-bold text-center mb-1">Selamat Datang</h1>
-            <p class="text-gray-400 text-sm text-center mb-6">Masuk untuk mulai belanja di MarketKu</p>
+            <p class="text-gray-400 text-sm text-center mb-6">Masuk untuk mulai belanja di SATU AI</p>
 
             @if ($errors->any())
                 <div class="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg mb-4">

@@ -1,4 +1,4 @@
-# MarketKu — Website Marketplace (Laravel 9 + MySQL)
+# SATU AI — Website Marketplace (Laravel 9 + MySQL)
 
 Project ini berisi source code custom (Models, Controllers, Views, Routes, Migrations)
 untuk website marketplace sesuai spesifikasi:

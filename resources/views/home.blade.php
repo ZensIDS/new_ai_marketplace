@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'MarketKu - Marketplace Langganan AI Terpercaya')
+@section('title', 'SATU AI - Marketplace Langganan AI Terpercaya')
 
 @section('content')
     <!-- HERO -->
@@ -16,8 +16,7 @@
                     Sekarang</a>
             </div>
             <div class="flex-1 hidden md:block">
-                <img src="https://placehold.co/500x350/151517/C9A227?text=MarketKu"
-                    class="rounded-2xl shadow-2xl border border-primary/20" alt="hero">
+                <img src="{{ asset('images/hero.png') }}" class="w-full rounded-2xl shadow-2xl border border-primary/20" alt="hero">
             </div>
         </div>
     </section>
