@@ -158,7 +158,7 @@
             <div>
                 <p class="font-semibold text-white mb-3">Bantuan</p>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="https://wa.me/{{ config('services.whatsapp.number', '62895399259868') }}"
+                    <li><a href="https://wa.me/{{ config('services.whatsapp.number', '6281910101161') }}"
                             target="_blank" class="hover:text-primary">Hubungi via WhatsApp</a></li>
                 </ul>
             </div>

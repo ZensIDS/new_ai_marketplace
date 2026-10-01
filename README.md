@@ -56,7 +56,7 @@ Buka `config/services.php`, tambahkan array berikut (contoh isinya ada di file
 
 ```php
 'whatsapp' => [
-    'number' => env('WHATSAPP_NUMBER', '62895399259868'),
+    'number' => env('WHATSAPP_NUMBER', '6281910101161'),
 ],
 ```
 
@@ -73,7 +73,7 @@ DB_USERNAME=root
 DB_PASSWORD=
 
 FILESYSTEM_DISK=public
-WHATSAPP_NUMBER=62895399259868
+WHATSAPP_NUMBER=6281910101161
 ```
 
 Buat database `marketplace` di MySQL (misal lewat phpMyAdmin/HeidiSQL/CLI).
