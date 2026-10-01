@@ -4,13 +4,6 @@
 @section('content')
     <div class="max-w-7xl mx-auto px-4 py-8">
 
-        <!-- Search mobile -->
-        <form action="{{ route('products.index') }}" method="GET" class="flex md:hidden mb-5">
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari produk..."
-                class="w-full border border-gray-200 rounded-l-full px-4 py-2 text-sm focus:outline-none">
-            <button class="bg-primary text-white px-4 rounded-r-full">Cari</button>
-        </form>
-
         <div class="flex flex-col md:flex-row gap-6">
             <!-- Sidebar kategori -->
             <aside class="md:w-56 shrink-0">
@@ -42,11 +35,37 @@
                     <p class="text-sm text-gray-400">{{ $products->total() }} produk ditemukan</p>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+                @if (request()->filled('q'))
+                    <p class="text-sm text-gray-500 mb-3">Hasil untuk
+                        <span class="font-semibold text-gray-800">“{{ request('q') }}”</span>
+                    </p>
+                    @if (!empty($relatedKeywords) && $relatedKeywords->isNotEmpty())
+                        <div class="flex flex-wrap items-center gap-2 mb-5">
+                            <span class="text-xs text-gray-400">Pencarian terkait:</span>
+                            @foreach ($relatedKeywords as $kw)
+                                <a href="{{ route('products.index', ['q' => $kw]) }}"
+                                    class="text-xs px-3 py-1.5 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary transition">{{ $kw }}</a>
+                            @endforeach
+                        </div>
+                    @endif
+                @endif
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                     @forelse($products as $product)
                         <x-product-card :product="$product" />
                     @empty
-                        <p class="col-span-full text-center text-gray-400 py-16">Produk tidak ditemukan.</p>
+                        <div class="col-span-full text-center py-16">
+                            <p class="text-gray-500 font-medium mb-1">Produk tidak ditemukan.</p>
+                            @if (!empty($popularKeywords) && $popularKeywords->isNotEmpty())
+                                <p class="text-sm text-gray-400 mb-4">Coba kata kunci populer ini:</p>
+                                <div class="flex flex-wrap justify-center gap-2">
+                                    @foreach ($popularKeywords as $kw)
+                                        <a href="{{ route('products.index', ['q' => $kw]) }}"
+                                            class="text-xs px-3 py-1.5 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary transition">{{ $kw }}</a>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                     @endforelse
                 </div>
 

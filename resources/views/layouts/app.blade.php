@@ -63,28 +63,16 @@
 
     <!-- NAVBAR -->
     <header class="bg-dark sticky top-0 z-50 shadow-lg">
-        {{-- <div class="bg-primary text-dark text-xs py-1.5 text-center px-4 font-medium">
-        Langganan AI Premium — chat langsung admin lewat WhatsApp!
-    </div> --}}
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+        <div class="max-w-7xl mx-auto px-3 md:px-4 py-3 flex items-center gap-2 md:gap-4">
             <a href="{{ route('home') }}" class="shrink-0 flex items-center">
-                <img src="{{ asset('images/logosatuai1.png') }}" alt="SATU AI" class="h-12 w-auto object-contain">
+                <img src="{{ asset('images/logosatuai1.png') }}" alt="SATU AI"
+                    class="h-9 md:h-12 w-auto object-contain">
             </a>
 
-            <form action="{{ route('products.index') }}" method="GET" class="flex-1 hidden md:flex">
-                <input type="text" name="q" value="{{ request('q') }}"
-                    placeholder="Cari produk AI impianmu..."
-                    class="w-full border border-white/10 bg-surface text-white placeholder-gray-500 rounded-l-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                <button class="bg-primary hover:bg-primary-dark text-dark font-semibold px-5 rounded-r-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
-                    </svg>
-                </button>
-            </form>
+            {{-- Search box: tampil di mobile & desktop --}}
+            <x-search-box variant="dark" class="flex flex-1 min-w-0" />
 
-            <div class="flex items-center gap-3 ml-auto">
+            <div class="flex items-center gap-1 md:gap-3 shrink-0">
                 @auth
                     @if (auth()->user()->isCustomer())
                         <a href="{{ route('cart.index') }}" id="cart-icon"
@@ -98,28 +86,97 @@
                                 class="absolute -top-1 -right-1 bg-primary text-dark text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center {{ session('cart') && count(session('cart')) ? '' : 'hidden' }}">{{ session('cart') ? count(session('cart')) : 0 }}</span>
                         </a>
                     @endif
-                    <div class="hidden sm:block text-sm text-right">
-                        <p class="font-semibold leading-tight text-white">{{ auth()->user()->name }}</p>
-                        <p class="text-gray-400 text-xs leading-tight">{{ ucfirst(auth()->user()->role) }}</p>
-                    </div>
-                    @if (auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}"
-                            class="text-sm font-medium text-primary hover:underline hidden sm:inline">Admin Panel</a>
-                    @endif
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button
-                            class="text-sm font-medium bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full">Keluar</button>
-                    </form>
-                @else
-                    <a href="{{ route('login') }}"
-                        class="text-sm font-medium px-4 py-2 rounded-full text-white hover:bg-white/10">Masuk</a>
-                    <a href="{{ route('register') }}"
-                        class="text-sm font-medium bg-primary text-dark px-4 py-2 rounded-full hover:bg-primary-dark">Daftar</a>
                 @endauth
+
+                {{-- Menu desktop --}}
+                <div class="hidden md:flex items-center gap-3">
+                    @auth
+                        <div class="hidden sm:block text-sm text-right">
+                            <p class="font-semibold leading-tight text-white">{{ auth()->user()->name }}</p>
+                            <p class="text-gray-400 text-xs leading-tight">{{ ucfirst(auth()->user()->role) }}</p>
+                        </div>
+                        @if (auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="text-sm font-medium text-primary hover:underline hidden sm:inline">Admin Panel</a>
+                        @endif
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button
+                                class="text-sm font-medium bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full">Keluar</button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}"
+                            class="text-sm font-medium px-4 py-2 rounded-full text-white hover:bg-white/10">Masuk</a>
+                        <a href="{{ route('register') }}"
+                            class="text-sm font-medium bg-primary text-dark px-4 py-2 rounded-full hover:bg-primary-dark">Daftar</a>
+                    @endauth
+                </div>
+
+                {{-- Tombol hamburger (mobile) --}}
+                <button type="button" id="menu-btn" class="md:hidden p-2 rounded-full hover:bg-white/10 text-white"
+                    aria-label="Buka menu" aria-controls="mobile-menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
+
+    <!-- SIDEBAR MENU (mobile) -->
+    <div id="mobile-menu" class="fixed inset-0 z-[100] hidden md:hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-black/60" data-menu-close></div>
+        <aside id="menu-panel"
+            class="absolute right-0 top-0 h-full w-72 max-w-[85%] bg-dark text-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <img src="{{ asset('images/logosatuai1.png') }}" alt="SATU AI" class="h-9 w-auto object-contain">
+                <button type="button" data-menu-close class="p-2 rounded-full hover:bg-white/10" aria-label="Tutup menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            @auth
+                <div class="px-4 py-4 border-b border-white/10">
+                    <p class="font-semibold leading-tight">{{ auth()->user()->name }}</p>
+                    <p class="text-gray-400 text-xs">{{ ucfirst(auth()->user()->role) }}</p>
+                </div>
+            @endauth
+
+            <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-1 text-sm font-medium">
+                <a href="{{ route('home') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10">Beranda</a>
+                <a href="{{ route('products.index') }}"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10">Semua Produk</a>
+                @auth
+                    @if (auth()->user()->isCustomer())
+                        <a href="{{ route('cart.index') }}"
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10">Keranjang</a>
+                    @endif
+                    @if (auth()->user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}"
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl text-primary hover:bg-white/10">Admin Panel</a>
+                    @endif
+                @endauth
+            </nav>
+
+            <div class="p-4 border-t border-white/10 space-y-2">
+                @auth
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button class="w-full text-sm font-medium bg-white/10 hover:bg-white/20 py-3 rounded-full">Keluar</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="block text-center text-sm font-medium border border-white/20 hover:bg-white/10 py-3 rounded-full">Masuk</a>
+                    <a href="{{ route('register') }}"
+                        class="block text-center text-sm font-semibold bg-primary text-dark hover:bg-primary-dark py-3 rounded-full">Daftar</a>
+                @endauth
+            </div>
+        </aside>
+    </div>
 
     <main>
         @if (session('success'))
@@ -240,6 +297,38 @@
         }
     </script>
 
+    <script>
+        (function() {
+            const menu = document.getElementById('mobile-menu');
+            const panel = document.getElementById('menu-panel');
+            if (!menu || !panel) return;
+            const lock = on => document.body.classList.toggle('overflow-hidden', on);
+            const open = () => {
+                menu.classList.remove('hidden');
+                menu.setAttribute('aria-hidden', 'false');
+                lock(true);
+                requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.remove('translate-x-full')));
+            };
+            const close = () => {
+                panel.classList.add('translate-x-full');
+                menu.setAttribute('aria-hidden', 'true');
+                lock(false);
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            };
+            document.getElementById('menu-btn')?.addEventListener('click', open);
+            document.querySelectorAll('[data-menu-close]').forEach(el => el.addEventListener('click', close));
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && !menu.classList.contains('hidden')) close();
+            });
+            window.matchMedia('(min-width: 768px)').addEventListener('change', e => {
+                if (e.matches && !menu.classList.contains('hidden')) {
+                    panel.classList.add('translate-x-full');
+                    menu.classList.add('hidden');
+                    lock(false);
+                }
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 
