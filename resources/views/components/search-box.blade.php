@@ -125,7 +125,7 @@
                                 if (r.length) {
                                     h += `<div class="flex items-center justify-between pr-4">${title('Terakhir dicari')}<button type="button" data-clear class="text-[11px] text-gray-400 hover:text-red-500 pt-3">Hapus</button></div>` + chips(r);
                                 }
-                                if (d.popular?.length) h += title('🔥 Pencarian populer') + chips(d.popular);
+                                if (d.popular?.length) h += title('Pencarian populer') + chips(d.popular);
                                 if (d.categories?.length) h += title('Jelajahi kategori') + catRows(d.categories);
                                 box.innerHTML = h + '<div class="pb-2"></div>';
                                 return;

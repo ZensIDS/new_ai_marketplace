@@ -105,9 +105,7 @@
         @endif
     </div>
 
-    @auth
-        @if (auth()->user()->isCustomer())
-            @push('scripts')
+    @push('scripts')
                 <script>
                     const waNumber = "{{ $waNumber }}";
                     const userName = @json($userName);
@@ -153,7 +151,5 @@
                         if (buyBtn) buyBtn.href = buildWaLink(initialPrice);
                     });
                 </script>
-            @endpush
-        @endif
-    @endauth
+    @endpush
 @endsection
