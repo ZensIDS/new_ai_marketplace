@@ -18,6 +18,19 @@
     $waLink = "https://wa.me/{$waNumber}?text={$waText}";
 
     $defaultVariant = $product->relationLoaded('variants') ? $product->variants->sortBy('price')->first() : null;
+    $hasVariants = $product->relationLoaded('variants') && $product->variants->isNotEmpty();
+    $variantsData = $hasVariants
+        ? $product->variants
+            ->map(
+                fn($v) => [
+                    'id' => $v->id,
+                    'name' => $v->name,
+                    'price' => $v->formatted_price,
+                    'stock' => (int) $v->stock,
+                ],
+            )
+            ->values()
+        : collect();
 @endphp
 
 <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 card-hover flex flex-col">
@@ -55,8 +68,12 @@
             @if (auth()->user()->isCustomer())
                 {{-- CUSTOMER: 2 tombol - keranjang (icon only di mobile) & beli langsung via WhatsApp --}}
                 <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="addToCartAjax(this)" data-url="{{ route('cart.add', $product) }}"
-                        data-image="{{ $product->image_url }}" data-variant-id="{{ $defaultVariant?->id ?? 0 }}"
+                    <button type="button"
+                        onclick="{{ $hasVariants ? 'openVariantModal(this)' : 'addToCartAjax(this)' }}"
+                        data-url="{{ route('cart.add', $product) }}" data-image="{{ $product->image_url }}"
+                        data-variant-id="{{ $defaultVariant?->id ?? 0 }}"
+                        @if ($hasVariants) data-name="{{ $product->name }}"
+                            data-variants="{{ $variantsData->toJson() }}" @endif
                         title="Tambah ke keranjang" aria-label="Tambah ke keranjang"
                         class="w-full flex items-center justify-center gap-1 border border-primary text-primary hover:bg-primary-light text-xs font-semibold py-2.5 rounded-xl transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"

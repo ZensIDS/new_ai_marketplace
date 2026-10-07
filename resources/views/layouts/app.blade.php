@@ -225,6 +225,48 @@
         </div>
     </footer>
 
+    @auth
+        @if (auth()->user()->isCustomer())
+            {{-- Modal pilih varian (bottom sheet di mobile, dialog di desktop) --}}
+            <div id="variant-modal" class="fixed inset-0 z-[70] hidden" role="dialog" aria-modal="true"
+                aria-labelledby="variant-modal-title" aria-hidden="true">
+                <div id="variant-backdrop" data-variant-close
+                    class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-200"></div>
+                <div class="absolute inset-0 flex items-end md:items-center justify-center pointer-events-none">
+                    <div id="variant-sheet"
+                        class="pointer-events-auto w-full md:max-w-md bg-white rounded-t-3xl md:rounded-2xl shadow-2xl flex flex-col max-h-[85vh] translate-y-full md:translate-y-4 opacity-0 transition duration-200 ease-out">
+                        <div class="flex justify-center pt-2.5 md:hidden">
+                            <span class="w-10 h-1 rounded-full bg-gray-200"></span>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 border-b border-gray-100">
+                            <img id="variant-img" src="" alt=""
+                                class="w-16 h-16 rounded-xl object-cover bg-gray-100 shrink-0">
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs text-gray-400">Pilih varian</p>
+                                <h3 id="variant-modal-title" class="font-semibold text-sm leading-snug line-clamp-2"></h3>
+                                <p id="variant-price" class="text-primary font-bold text-lg mt-0.5"></p>
+                            </div>
+                            <button type="button" data-variant-close aria-label="Tutup"
+                                class="shrink-0 p-1.5 -mr-1 -mt-1 rounded-full text-gray-400 hover:bg-gray-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="variant-options" class="p-4 space-y-2 overflow-y-auto flex-1"></div>
+                        <div class="p-4 border-t border-gray-100" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                            <button type="button" id="variant-confirm" onclick="confirmVariantModal(this)"
+                                class="w-full bg-primary hover:bg-primary-dark text-dark text-sm font-bold py-3.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                Tambah ke Keranjang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endauth
+
     <script>
         // ==== Global helper: tambah ke keranjang via AJAX + animasi terbang ke icon cart ====
         function addToCartAjax(button) {
@@ -295,6 +337,129 @@
             badge.innerText = count;
             badge.classList.toggle('hidden', count <= 0);
         }
+
+        // ==== Modal pilih varian ====
+        let variantSelectedId = 0;
+
+        function openVariantModal(button) {
+            const modal = document.getElementById('variant-modal');
+            if (!modal) return;
+            let variants = [];
+            try { variants = JSON.parse(button.dataset.variants || '[]'); } catch (e) {}
+            if (!variants.length) { addToCartAjax(button); return; }
+
+            document.getElementById('variant-modal-title').textContent = button.dataset.name || '';
+            document.getElementById('variant-img').src = button.dataset.image || '';
+
+            const confirmBtn = document.getElementById('variant-confirm');
+            confirmBtn.dataset.url = button.dataset.url;
+            confirmBtn.dataset.image = button.dataset.image;
+            if (button.dataset.changeUrl) confirmBtn.dataset.changeUrl = button.dataset.changeUrl;
+            else delete confirmBtn.dataset.changeUrl;
+            const currentId = button.dataset.currentVariantId || '';
+            document.querySelector('#variant-modal-title').previousElementSibling.textContent =
+                button.dataset.changeUrl ? 'Ganti varian' : 'Pilih varian';
+
+            const list = document.getElementById('variant-options');
+            list.innerHTML = '';
+            variants.forEach(v => {
+                const habis = v.stock <= 0;
+                const opt = document.createElement('button');
+                opt.type = 'button';
+                opt.dataset.id = v.id;
+                opt.dataset.price = v.price;
+                opt.disabled = habis;
+                opt.className = 'variant-opt w-full flex items-center justify-between gap-3 text-left border rounded-xl px-4 py-3 transition ' +
+                    (habis ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed' : 'border-gray-200 hover:border-primary');
+                const left = document.createElement('span');
+                left.className = 'min-w-0';
+                const name = document.createElement('span');
+                name.className = 'block text-sm font-medium truncate';
+                name.textContent = v.name;
+                const stock = document.createElement('span');
+                stock.className = 'block text-[11px] ' + (habis ? 'text-red-400' : 'text-gray-400');
+                stock.textContent = habis ? 'Stok habis' : 'Stok: ' + v.stock;
+                left.append(name, stock);
+                const price = document.createElement('span');
+                price.className = 'text-sm font-bold shrink-0 ' + (habis ? '' : 'text-primary');
+                price.textContent = v.price;
+                opt.append(left, price);
+                opt.addEventListener('click', () => selectVariantInModal(opt));
+                list.appendChild(opt);
+            });
+
+            // pilih otomatis varian pertama yang masih ada stok
+            const current = currentId ? list.querySelector('.variant-opt[data-id="' + currentId + '"]:not([disabled])') : null;
+            const first = current || list.querySelector('.variant-opt:not([disabled])');
+            if (first) selectVariantInModal(first);
+            else {
+                document.getElementById('variant-price').textContent = '';
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Stok Habis';
+            }
+
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                document.getElementById('variant-backdrop').classList.remove('opacity-0');
+                document.getElementById('variant-sheet').classList.remove('translate-y-full', 'md:translate-y-4', 'opacity-0');
+            }));
+        }
+
+        function selectVariantInModal(opt) {
+            document.querySelectorAll('#variant-options .variant-opt:not([disabled])').forEach(o => {
+                o.classList.remove('border-primary', 'bg-primary-light');
+                o.classList.add('border-gray-200');
+            });
+            opt.classList.remove('border-gray-200');
+            opt.classList.add('border-primary', 'bg-primary-light');
+            variantSelectedId = opt.dataset.id;
+            document.getElementById('variant-price').textContent = opt.dataset.price;
+            const confirmBtn = document.getElementById('variant-confirm');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = confirmBtn.dataset.changeUrl ? 'Simpan Varian' : 'Tambah ke Keranjang';
+            confirmBtn.dataset.variantId = opt.dataset.id;
+        }
+
+        function closeVariantModal() {
+            const modal = document.getElementById('variant-modal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            document.getElementById('variant-backdrop').classList.add('opacity-0');
+            document.getElementById('variant-sheet').classList.add('translate-y-full', 'md:translate-y-4', 'opacity-0');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function confirmVariantModal(btn) {
+            if (btn.disabled || !btn.dataset.variantId) return;
+            if (btn.dataset.changeUrl) {
+                // halaman keranjang: ganti varian item lalu muat ulang halaman
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = btn.dataset.changeUrl;
+                const token = document.querySelector('meta[name="csrf-token"]')?.content ||
+                    document.querySelector('input[name="_token"]')?.value || '';
+                [['_token', token], ['variant_id', btn.dataset.variantId]].forEach(([n, v]) => {
+                    const i = document.createElement('input');
+                    i.type = 'hidden'; i.name = n; i.value = v;
+                    form.appendChild(i);
+                });
+                document.body.appendChild(form);
+                form.submit();
+                return;
+            }
+            addToCartAjax(btn);
+            closeVariantModal();
+        }
+
+        document.addEventListener('click', e => {
+            if (e.target.closest('[data-variant-close]')) closeVariantModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeVariantModal();
+        });
     </script>
 
     <script>

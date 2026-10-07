@@ -42,7 +42,22 @@
                         <div class="flex-1 min-w-0">
                             <p class="font-semibold text-sm md:text-base line-clamp-2">{{ $item->product->name }}</p>
                             @if ($item->variant)
-                                <p class="text-xs text-primary font-medium">Varian: {{ $item->variant->name }}</p>
+                                @if ($item->product->variants->count() > 1)
+                                    <button type="button" onclick="openVariantModal(this)"
+                                        data-name="{{ $item->product->name }}" data-image="{{ $item->product->image_url }}"
+                                        data-change-url="{{ route('cart.variant', $item->key) }}"
+                                        data-current-variant-id="{{ $item->variant->id }}"
+                                        data-variants="{{ $item->product->variants->map(fn($v) => ['id' => $v->id, 'name' => $v->name, 'price' => $v->formatted_price, 'stock' => (int) $v->stock])->values()->toJson() }}"
+                                        class="mt-1 inline-flex items-center gap-1 max-w-full text-xs font-medium text-primary-dark bg-primary-light hover:bg-primary/20 border border-primary/30 rounded-lg px-2 py-1 transition">
+                                        <span class="truncate">Varian: {{ $item->variant->name }}</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 shrink-0" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                @else
+                                    <p class="text-xs text-primary font-medium">Varian: {{ $item->variant->name }}</p>
+                                @endif
                             @endif
                             <p class="text-xs text-gray-400">{{ $item->product->category->name ?? '' }}</p>
                             <p class="text-primary font-bold mt-1">Rp {{ number_format($item->unit_price, 0, ',', '.') }}

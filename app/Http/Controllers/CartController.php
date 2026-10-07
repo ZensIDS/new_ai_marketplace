@@ -91,6 +91,51 @@ class CartController extends Controller
         return redirect()->route('cart.index');
     }
 
+    public function changeVariant(Request $request, string $key)
+    {
+        $cart = session()->get('cart', []);
+
+        if (!isset($cart[$key])) {
+            return redirect()->route('cart.index');
+        }
+
+        $row = $cart[$key];
+        $variant = ProductVariant::where('id', (int) $request->input('variant_id'))
+            ->where('product_id', $row['product_id'])
+            ->firstOrFail();
+
+        $newKey = $row['product_id'] . '_' . $variant->id;
+
+        if ($newKey === $key) {
+            return redirect()->route('cart.index');
+        }
+
+        if (isset($cart[$newKey])) {
+            // varian tujuan sudah ada di keranjang -> gabungkan qty
+            $cart[$newKey]['qty'] += $row['qty'];
+            unset($cart[$key]);
+        } else {
+            // ganti varian dengan mempertahankan urutan item di keranjang
+            $rebuilt = [];
+            foreach ($cart as $k => $r) {
+                if ($k === $key) {
+                    $rebuilt[$newKey] = [
+                        'product_id' => $row['product_id'],
+                        'variant_id' => $variant->id,
+                        'qty' => $row['qty'],
+                    ];
+                } else {
+                    $rebuilt[$k] = $r;
+                }
+            }
+            $cart = $rebuilt;
+        }
+
+        session()->put('cart', $cart);
+
+        return redirect()->route('cart.index');
+    }
+
     public function remove(string $key)
     {
         $cart = session()->get('cart', []);

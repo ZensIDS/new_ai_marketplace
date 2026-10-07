@@ -42,6 +42,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
     Route::post('/cart/update/{key}', [CartController::class, 'updateQty'])->name('cart.update');
+    Route::post('/cart/variant/{key}', [CartController::class, 'changeVariant'])->name('cart.variant');
     Route::delete('/cart/remove/{key}', [CartController::class, 'remove'])->name('cart.remove');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 });
